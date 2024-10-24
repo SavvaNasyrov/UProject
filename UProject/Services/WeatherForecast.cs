@@ -91,5 +91,29 @@ namespace UProject.Services
 
             return sb.ToString();
         }
+
+        public async Task<string[]> GetCityAsync(string city)
+        {
+            var resp = await _httpClient.GetAsync($"v1/search.json?key={_token}&q={city}");
+
+            if (!resp.IsSuccessStatusCode)
+                return Array.Empty<string>();
+
+            var jsonContent = await resp.Content.ReadAsStringAsync();
+
+            
+
+            try
+            {
+                return JArray.Parse(jsonContent)
+                    .ToObject<SearchResult[]>()?
+                    .Select(x => x.Name)
+                    .ToArray() ?? throw new Exception("null");
+            }
+            catch
+            {
+                return Array.Empty<string>();
+            }
+        }
     }
 }

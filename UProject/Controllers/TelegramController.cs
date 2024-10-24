@@ -22,12 +22,15 @@ namespace UProject.Controllers
 
         private readonly ConcurrentQueue<BotMessage> _queue;
 
-        public TelegramController(ITelegramBotClient botClient, AppDbContext db, ILogger<TelegramBotClient> logger, ConcurrentQueue<BotMessage> queue)
+        private readonly WeatherForecast _weatherForecast;
+
+        public TelegramController(ITelegramBotClient botClient, AppDbContext db, ILogger<TelegramBotClient> logger, ConcurrentQueue<BotMessage> queue, WeatherForecast weatherForecast)
         {
             _botClient = botClient;
             _db = db;
             _logger = logger;
             _queue = queue;
+            _weatherForecast = weatherForecast;
         }
 
         [HttpGet]
@@ -68,27 +71,39 @@ namespace UProject.Controllers
 
             var userId = update.Message.Chat.Id;
 
+            var cities = await _weatherForecast.GetCityAsync(update.Message.Text!);
+
+            if (cities!.Length == 0)
+            {
+                _queue.Enqueue(new BotMessage
+                {
+                    Id = userId,
+                    Text = $"Такого города нет",
+                });
+                return;
+            }
+
             var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
             if (user == null)
             {
                 user = new Models.User()
                 {
-                    City = update.Message.Text!,
+                    City = cities[0],
                     Id = userId,
                     NotificationInterval = Interval.Inset
                 };
                 await _db.Users.AddAsync(user);
             }
 
-            user.City = update.Message.Text!;
+            user.City = cities[0];
 
             await _db.SaveChangesAsync();
 
             _queue.Enqueue(new BotMessage
             {
                 Id = userId,
-                Text = "Выберите интервал",
+                Text = $"Выбран город: {cities[0]}\nВыберите интервал",
                 ReplyMarkup = GetIntervalsKeyboard()
             });
         }
@@ -127,7 +142,7 @@ namespace UProject.Controllers
                 _queue.Enqueue(new BotMessage
                 {
                     Id = update.CallbackQuery.From.Id,
-                    Text = "Данные успешно сохранены"
+                    Text = "Интервал выбран. Ждите погоду!"
                 });
             }
             else
