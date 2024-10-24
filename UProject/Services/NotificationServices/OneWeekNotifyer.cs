@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using UProject.Abstractions;
 using UProject.Models;
 
 namespace UProject.Services.NotificationServices
@@ -25,7 +26,7 @@ namespace UProject.Services.NotificationServices
                 using var scope = _serviceProvider.CreateScope();
 
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var weather = scope.ServiceProvider.GetRequiredService<WeatherForecast>();
+                var weather = scope.ServiceProvider.GetRequiredService<IWeatherForecast>();
 
                 foreach (var user in db.Users.Where(x => x.NotificationInterval == Interval.OneWeek))
                 {

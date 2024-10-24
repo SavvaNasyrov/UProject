@@ -5,6 +5,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using UProject.Abstractions;
 using UProject.Models;
 using UProject.Services;
 
@@ -22,9 +23,9 @@ namespace UProject.Controllers
 
         private readonly ConcurrentQueue<BotMessage> _queue;
 
-        private readonly WeatherForecast _weatherForecast;
+        private readonly IWeatherForecast _weatherForecast;
 
-        public TelegramController(ITelegramBotClient botClient, AppDbContext db, ILogger<TelegramBotClient> logger, ConcurrentQueue<BotMessage> queue, WeatherForecast weatherForecast)
+        public TelegramController(ITelegramBotClient botClient, AppDbContext db, ILogger<TelegramBotClient> logger, ConcurrentQueue<BotMessage> queue, IWeatherForecast weatherForecast)
         {
             _botClient = botClient;
             _db = db;

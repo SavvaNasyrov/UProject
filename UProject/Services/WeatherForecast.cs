@@ -1,11 +1,12 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using UProject.Abstractions;
 using UProject.Models.Weather;
 
 namespace UProject.Services
 {
-    public class WeatherForecast
+    public class WeatherForecast : IWeatherForecast
     {
         private readonly HttpClient _httpClient;
 
@@ -80,7 +81,7 @@ namespace UProject.Services
             }
 
             var sb = new StringBuilder("Погода на неделю: \n");
-            
+
             foreach (var day in weather.Forecast.ForecastDays)
             {
                 sb.Append($"{day.Date}:\n" +
@@ -101,7 +102,7 @@ namespace UProject.Services
 
             var jsonContent = await resp.Content.ReadAsStringAsync();
 
-            
+
 
             try
             {

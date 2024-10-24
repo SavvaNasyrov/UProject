@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Telegram.Bot;
+using UProject.Abstractions;
 using UProject.Models;
 using UProject.Services;
 using UProject.Services.NotificationServices;
@@ -23,7 +24,7 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddDbContext<AppDbContext>();
 
-builder.Services.AddScoped<WeatherForecast>();
+builder.Services.AddScoped<IWeatherForecast, WeatherForecast>();
 
 builder.Services.AddSingleton<ITelegramBotClient, TelegramBotClient>(x =>
 {
