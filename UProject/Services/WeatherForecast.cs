@@ -13,5 +13,15 @@
         {
             return city + " прогноз";
         }
+
+        public string Daily(string city)
+        {
+            return "daily for city " + city;
+        }
+
+        public string Weekly(string city)
+        {
+            return "weekly for city " + city;
+        }
     }
 }

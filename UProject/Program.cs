@@ -1,4 +1,7 @@
+using System.Collections.Concurrent;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
+using UProject.Models;
 using UProject.Services;
 using UProject.Services.NotificationServices;
 
@@ -21,7 +24,7 @@ builder.Services.AddDbContext<AppDbContext>();
 
 builder.Services.AddScoped<WeatherForecast>();
 
-builder.Services.AddScoped<ITelegramBotClient, TelegramBotClient>(x =>
+builder.Services.AddSingleton<ITelegramBotClient, TelegramBotClient>(x =>
 {
     var config = x.GetRequiredService<IConfiguration>();
 
@@ -35,6 +38,10 @@ builder.Services.AddScoped<ITelegramBotClient, TelegramBotClient>(x =>
     return bot;
 });
 
+builder.Services.AddSingleton<ConcurrentQueue<BotMessage>>();
+
+builder.Services.AddHostedService<Sender>();
+
 builder.Services.AddHostedService<OneMinuteNotifyer>();
 
 var app = builder.Build();
@@ -45,8 +52,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
 
 app.MapControllers();
 

@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using UProject.Models;
 using UProject.Services;
+using UProject.Services.NotificationServices;
 
 namespace UProject.Controllers
 {
@@ -20,11 +22,14 @@ namespace UProject.Controllers
 
         private readonly ILogger<TelegramBotClient> _logger;
 
-        public TelegramController(ITelegramBotClient botClient, AppDbContext db, ILogger<TelegramBotClient> logger)
+        private readonly ConcurrentQueue<BotMessage> _queue;
+
+        public TelegramController(ITelegramBotClient botClient, AppDbContext db, ILogger<TelegramBotClient> logger, ConcurrentQueue<BotMessage> queue)
         {
             _botClient = botClient;
             _db = db;
             _logger = logger;
+            _queue = queue;
         }
 
         [HttpGet]
@@ -59,7 +64,8 @@ namespace UProject.Controllers
         {
             if (update.Message!.Text == "/start")
             {
-                await _botClient.SendTextMessageAsync(update.Message.Chat.Id, "Здравствуйте! Введите город");
+                _queue.Enqueue( new BotMessage { Id = update.Message.Chat.Id, Text = "Здравствуйте! Введите город" });
+                return;
             }
 
             var userId = update.Message.Chat.Id;
@@ -77,10 +83,12 @@ namespace UProject.Controllers
                 await _db.SaveChangesAsync();
             }
 
-            await _botClient.SendTextMessageAsync(
-                userId,
-                "Выберите интервал",
-                replyMarkup: GetIntervalsKeyboard());
+            _queue.Enqueue( new BotMessage
+            {
+                Id = userId,
+                Text = "Выберите интервал",
+                ReplyMarkup = GetIntervalsKeyboard() 
+            });
         }
 
         private static IReplyMarkup GetIntervalsKeyboard()
@@ -95,15 +103,18 @@ namespace UProject.Controllers
 
         private async Task HandleCallbackQueryAsync(Update update)
         {
+            await _botClient.AnswerCallbackQueryAsync(update.CallbackQuery!.Id);
             if (Enum.TryParse<Interval>(update.CallbackQuery!.Data, out var res))
             {
                 var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == update.CallbackQuery.From.Id);
 
                 if (user == null)
                 {
-                    await _botClient.SendTextMessageAsync(
-                        update.CallbackQuery.From.Id,
-                        "Что-то пошло не так. Введите /start");
+                    _queue.Enqueue( new BotMessage
+                    {
+                        Id = update.CallbackQuery.From.Id,
+                        Text = "Что-то пошло не так. Введите /start"
+                    });
                     return;
                 }
 
@@ -111,16 +122,20 @@ namespace UProject.Controllers
 
                 await _db.SaveChangesAsync();
 
-                await _botClient.SendTextMessageAsync(
-                    update.CallbackQuery.From.Id,
-                    "Данные успешно сохранены");
+                _queue.Enqueue( new BotMessage
+                {
+                    Id = update.CallbackQuery.From.Id,
+                    Text = "Данные успешно сохранены"
+                });
             }
             else
             {
-                await _botClient.SendTextMessageAsync(
-                    update.CallbackQuery.From.Id,
-                    "Что-то пошло не так. Попробуйте еще раз",
-                    replyMarkup: GetIntervalsKeyboard());
+                _queue.Enqueue( new BotMessage
+                {
+                    Id = update.CallbackQuery.From.Id,
+                    Text = "Что-то пошло не так. Попробуйте еще раз",
+                    ReplyMarkup = GetIntervalsKeyboard()
+                });
             }
         }
     }

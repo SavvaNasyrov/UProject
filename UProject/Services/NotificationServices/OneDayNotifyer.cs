@@ -5,7 +5,7 @@ using UProject.Models;
 
 namespace UProject.Services.NotificationServices
 {
-    public class OneMinuteNotifyer : BackgroundService
+    public class OneDayNotifyer : BackgroundService
     {
         private readonly ILogger<OneMinuteNotifyer> _logger;
 
@@ -13,7 +13,7 @@ namespace UProject.Services.NotificationServices
 
         private readonly ConcurrentQueue<BotMessage> _queue;
 
-        public OneMinuteNotifyer(ILogger<OneMinuteNotifyer> logger, IServiceProvider scopeFactory, ConcurrentQueue<BotMessage> queue)
+        public OneDayNotifyer(ILogger<OneMinuteNotifyer> logger, IServiceProvider scopeFactory, ConcurrentQueue<BotMessage> queue)
         {
             _logger = logger;
             _serviceProvider = scopeFactory;
@@ -25,13 +25,13 @@ namespace UProject.Services.NotificationServices
             while (!stoppingToken.IsCancellationRequested)
             {
                 using var scope = _serviceProvider.CreateScope();
-                
+
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var weather = scope.ServiceProvider.GetRequiredService<WeatherForecast>();
 
-                foreach (var user in db.Users.Where(x => x.NotificationInterval == Interval.OneMinute))
+                foreach (var user in db.Users.Where(x => x.NotificationInterval == Interval.OneDay))
                 {
-                    _queue.Enqueue( new BotMessage
+                    _queue.Enqueue(new BotMessage
                     {
                         Id = user.Id,
                         Text = weather.GetForCity(user.City)
@@ -41,7 +41,7 @@ namespace UProject.Services.NotificationServices
                         break;
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
             }
         }
     }
