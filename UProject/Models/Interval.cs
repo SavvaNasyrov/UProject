@@ -4,7 +4,7 @@
     {
         Inset,
         OneMinute,
-        OneDay, 
+        OneDay,
         OneWeek,
     }
 }

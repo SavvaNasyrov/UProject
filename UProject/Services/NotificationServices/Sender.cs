@@ -1,6 +1,4 @@
-﻿
-using Microsoft.VisualBasic;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using UProject.Models;
@@ -28,7 +26,7 @@ namespace UProject.Services.NotificationServices
                 {
                     if (_notificationQueue.TryDequeue(out var message))
                     {
-                        await _telegramBotClient.SendTextMessageAsync(message.Id, message.Text, replyMarkup: message.ReplyMarkup, cancellationToken: stoppingToken);
+                        await _telegramBotClient.SendTextMessageAsync(message.Id, message.Text, replyMarkup: message.ReplyMarkup, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,  cancellationToken: stoppingToken);
                     }
                 }
                 catch (ApiRequestException ex)

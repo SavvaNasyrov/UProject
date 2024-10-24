@@ -1,6 +1,5 @@
 ﻿
 using System.Collections.Concurrent;
-using Telegram.Bot;
 using UProject.Models;
 
 namespace UProject.Services.NotificationServices
@@ -34,7 +33,7 @@ namespace UProject.Services.NotificationServices
                     _queue.Enqueue(new BotMessage
                     {
                         Id = user.Id,
-                        Text = weather.GetForCity(user.City)
+                        Text = await weather.DailyAsync(user.City)
                     });
 
                     if (stoppingToken.IsCancellationRequested)

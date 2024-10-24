@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using Telegram.Bot;
@@ -8,7 +7,6 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using UProject.Models;
 using UProject.Services;
-using UProject.Services.NotificationServices;
 
 namespace UProject.Controllers
 {
@@ -64,13 +62,14 @@ namespace UProject.Controllers
         {
             if (update.Message!.Text == "/start")
             {
-                _queue.Enqueue( new BotMessage { Id = update.Message.Chat.Id, Text = "Здравствуйте! Введите город" });
+                _queue.Enqueue(new BotMessage { Id = update.Message.Chat.Id, Text = "Здравствуйте! Введите город" });
                 return;
             }
 
             var userId = update.Message.Chat.Id;
 
             var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
             if (user == null)
             {
                 user = new Models.User()
@@ -80,14 +79,17 @@ namespace UProject.Controllers
                     NotificationInterval = Interval.Inset
                 };
                 await _db.Users.AddAsync(user);
-                await _db.SaveChangesAsync();
             }
 
-            _queue.Enqueue( new BotMessage
+            user.City = update.Message.Text!;
+
+            await _db.SaveChangesAsync();
+
+            _queue.Enqueue(new BotMessage
             {
                 Id = userId,
                 Text = "Выберите интервал",
-                ReplyMarkup = GetIntervalsKeyboard() 
+                ReplyMarkup = GetIntervalsKeyboard()
             });
         }
 
@@ -110,7 +112,7 @@ namespace UProject.Controllers
 
                 if (user == null)
                 {
-                    _queue.Enqueue( new BotMessage
+                    _queue.Enqueue(new BotMessage
                     {
                         Id = update.CallbackQuery.From.Id,
                         Text = "Что-то пошло не так. Введите /start"
@@ -122,7 +124,7 @@ namespace UProject.Controllers
 
                 await _db.SaveChangesAsync();
 
-                _queue.Enqueue( new BotMessage
+                _queue.Enqueue(new BotMessage
                 {
                     Id = update.CallbackQuery.From.Id,
                     Text = "Данные успешно сохранены"
@@ -130,7 +132,7 @@ namespace UProject.Controllers
             }
             else
             {
-                _queue.Enqueue( new BotMessage
+                _queue.Enqueue(new BotMessage
                 {
                     Id = update.CallbackQuery.From.Id,
                     Text = "Что-то пошло не так. Попробуйте еще раз",

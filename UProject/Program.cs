@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using Telegram.Bot;
-using Telegram.Bot.Exceptions;
 using UProject.Models;
 using UProject.Services;
 using UProject.Services.NotificationServices;
@@ -19,6 +18,8 @@ builder.Services.AddHttpClient();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddDbContext<AppDbContext>();
 
@@ -43,6 +44,10 @@ builder.Services.AddSingleton<ConcurrentQueue<BotMessage>>();
 builder.Services.AddHostedService<Sender>();
 
 builder.Services.AddHostedService<OneMinuteNotifyer>();
+
+builder.Services.AddHostedService<OneDayNotifyer>();
+
+builder.Services.AddHostedService<OneWeekNotifyer>();
 
 var app = builder.Build();
 
