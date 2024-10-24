@@ -7,6 +7,11 @@ namespace UProject.Services
     {
         public DbSet<User> Users { get; set; }
 
+        public AppDbContext()
+        {
+            Database.EnsureCreated();
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Data Source=app.db");

@@ -1,5 +1,6 @@
 using Telegram.Bot;
 using UProject.Services;
+using UProject.Services.NotificationServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,11 +11,15 @@ builder.Configuration.AddJsonFile("Secrets/token.json");
 builder.Services.AddControllers()
     .AddNewtonsoftJson();
 
+builder.Services.AddHttpClient();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>();
+
+builder.Services.AddScoped<WeatherForecast>();
 
 builder.Services.AddScoped<ITelegramBotClient, TelegramBotClient>(x =>
 {
@@ -29,6 +34,8 @@ builder.Services.AddScoped<ITelegramBotClient, TelegramBotClient>(x =>
 
     return bot;
 });
+
+builder.Services.AddHostedService<OneMinuteNotifyer>();
 
 var app = builder.Build();
 
